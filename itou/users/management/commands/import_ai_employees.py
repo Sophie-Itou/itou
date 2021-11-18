@@ -299,11 +299,12 @@ class Command(BaseCommand):
         df = df.fillna("")
 
         self.logger.info("🚮 STEP 2: remove rows!")
+        cleaned_df = df.copy()
         # Exclude ended contracts.
-        ended_contracts = df[df[CONTRACT_ENDDATE_COL] != ""]
-        cleaned_df = df.drop(ended_contracts.index)
-        self.logger.info(f"Ended contract: excluding {len(ended_contracts)} rows.")
-        df.loc[ended_contracts.index, "Commentaire"] = "Ligne ignorée : contrat terminé."
+        # ended_contracts = cleaned_df[cleaned_df[CONTRACT_ENDDATE_COL] != ""]
+        # cleaned_df = cleaned_df.drop(ended_contracts.index)
+        # self.logger.info(f"Ended contract: excluding {len(ended_contracts)} rows.")
+        # df.loc[ended_contracts.index, "Commentaire"] = "Ligne ignorée : contrat terminé."
 
         # Exclude inexistent SIAE.
         inexistent_sirets = self.get_inexistent_structures(df)
