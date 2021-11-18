@@ -188,7 +188,7 @@ class JobApplicationQuerySet(models.QuerySet):
         via the employee record app.
 
         These job applications must:
-        - be definitely accepted (hiring can't be cancelled after CANCELLATION_DAYS_AFTER_HIRING_STARTED days)
+        - be definitely accepted
         - have no one-to-one relationship with an employee record
         - have been created after production date
 
@@ -198,15 +198,12 @@ class JobApplicationQuerySet(models.QuerySet):
         and NOT finishing the entire creation process.
         (employee record object creation occurs half-way of the "tunnel")
         """
-        today = datetime.date.today()
-        cancellation_date = today - relativedelta(days=JobApplication.CANCELLATION_DAYS_AFTER_HIRING_STARTED)
         return (
             self.exclude(approval=None)
             .accepted()
             .filter(Q(employee_record__status="NEW") | Q(employee_record__isnull=True))
             .filter(
                 to_siae=siae,
-                hiring_start_at__lt=cancellation_date,
                 # Hiring must start after production date:
                 hiring_start_at__gte=settings.EMPLOYEE_RECORD_FEATURE_AVAILABILITY_DATE,
             )
@@ -292,7 +289,6 @@ class JobApplication(xwf_models.WorkflowEnabled, models.Model):
         (APPROVAL_DELIVERY_MODE_MANUAL, "Manuel"),
     )
 
-    CANCELLATION_DAYS_AFTER_HIRING_STARTED = 4
     WEEKS_BEFORE_CONSIDERED_OLD = 3
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -503,8 +499,7 @@ class JobApplication(xwf_models.WorkflowEnabled, models.Model):
     def can_be_cancelled(self):
         if self.hiring_start_at:
             today = datetime.date.today()
-            delay_ends_at = self.hiring_start_at + relativedelta(days=self.CANCELLATION_DAYS_AFTER_HIRING_STARTED)
-            return today <= delay_ends_at
+            return today <= self.hiring_start_at
         return False
 
     @property
@@ -517,7 +512,7 @@ class JobApplication(xwf_models.WorkflowEnabled, models.Model):
 
     @property
     def cancellation_delay_end(self):
-        return self.hiring_start_at + relativedelta(days=self.CANCELLATION_DAYS_AFTER_HIRING_STARTED)
+        return self.hiring_start_at
 
     @property
     def is_refused_due_to_deactivation(self):
