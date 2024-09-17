@@ -10,7 +10,7 @@ from itou.employee_record.models import EmployeeRecord
 from itou.job_applications.models import JobApplication
 
 
-class JobApplicationInline(admin.StackedInline):
+class JobApplicat(admin.StackedInline):
     model = JobApplication
     extra = 0
     show_change_link = True
